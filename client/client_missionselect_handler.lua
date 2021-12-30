@@ -3,8 +3,12 @@ local missionselect_scaleform
 local instructional_button_scaleform
 local global_scaleform_data
 
+local show_next_job_selection = false
+
 local already_voted = false
 local voted_for = -1
+
+local player_list_shown = false
 
 local votes = {
     0,
@@ -19,6 +23,11 @@ local votes = {
 }
 
 AddEventHandler('slt_missionselect:CreateMenu', function(scaleform_data)
+
+    if not IsPlayerSwitchInProgress() then
+        SwitchOutPlayer(GetPlayerPed(-1), 0, 1)
+    end
+
     global_scaleform_data = scaleform_data
     Citizen.CreateThread(function()
 
@@ -106,86 +115,95 @@ AddEventHandler('slt_missionselect:CreateMenu', function(scaleform_data)
             )
         end
 
-
-        --CODE FOR DISPLAYING A PLAYER LIST ON THE RIGHT SIDE INSTEAD OF CARDS 3, 6 AND 9
-        -- Scaleform.CallFunction(
-        --     missionselect_scaleform, --scaleform_handle
-        --     false, --no return data
-        --     "SET_LOBBY_LIST_DATA_SLOT_EMPTY", --function
-        --     0
-        -- )
-
-        -- local tmp = RegisterPedheadshot(GetPlayerPed(-1))
-
-        -- while not IsPedheadshotReady(tmp) do
-        --     Citizen.Wait(0)
-        -- end
-
-        -- local headshot = "";
-        -- if IsPedheadshotValid(tmp) then
-        --     headshot = GetPedheadshotTxdString(tmp)
-        -- end
-
-        -- Scaleform.CallFunction(
-        --     missionselect_scaleform, --scaleform_handle
-        --     false, --no return data
-        --     "SET_LOBBY_LIST_DATA_SLOT", --function
-        --     0,
-        --     0,
-        --     0,
-        --     2,
-        --     152, --rank
-        --     true,
-        --     "Philipp Redel", --player_name
-        --     116, --color
-        --     false, --left_bar_color
-        --     0, --player_status_icon (47,48,49,54,63,64,65,66)
-        --     65, --icon (only 65 works)
-        --     0, --not used
-        --     "..+test", --crew_tag
-        --     0, --kick
-        --     "", --status
-        --     18, --status_color
-        --     headshot, --param10
-        --     headshot --param11
-        -- )
-
-        -- Scaleform.CallFunction(
-        --     missionselect_scaleform, --scaleform_handle
-        --     false, --no return data
-        --     "SET_LOBBY_LIST_DATA_SLOT", --function
-        --     1,0,0,2,43,true,"Max Mustermann",116,false,0,65,0,"",0,"",18,headshot,headshot
-        -- )
-
-        -- Scaleform.CallFunction(
-        --     missionselect_scaleform, --scaleform_handle
-        --     false, --no return data
-        --     "SET_LOBBY_LIST_DATA_SLOT", --function
-        --     2,0,0,2,1648,true,"Erika Musterfrau",116,false,0,65,0,"",0,"",18,headshot,headshot
-        -- )
-
-        -- Scaleform.CallFunction(
-        --     missionselect_scaleform, --scaleform_handle
-        --     false, --no return data
-        --     "SET_LOBBY_LIST_DATA_SLOT", --function
-        --     3,0,0,2,5,true,"TEST TEST",116,false,0,65,0,"",0,"",18,headshot,headshot
-        -- )
-
-        -- Scaleform.CallFunction(
-        --     missionselect_scaleform, --scaleform_handle
-        --     false, --no return data
-        --     "SET_LOBBY_LIST_VISIBILITY", --function
-        --     true
-        -- )
-
-        -- Scaleform.CallFunction(
-        --     missionselect_scaleform, --scaleform_handle
-        --     false, --no return data
-        --     "DISPLAY_LOBBY_LIST_VIEW" --function
-        -- )
+        show_next_job_selection = true
 
     end)
 end)
+
+function toggle_player_list()
+    --CODE FOR DISPLAYING A PLAYER LIST ON THE RIGHT SIDE INSTEAD OF CARDS 3, 6 AND 9
+    if player_list_shown then
+        Scaleform.CallFunction(
+            missionselect_scaleform, --scaleform_handle
+            false, --no return data
+            "SET_LOBBY_LIST_VISIBILITY", --function
+            false
+        )
+
+        Scaleform.CallFunction(
+            missionselect_scaleform, --scaleform_handle
+            false, --no return data
+            "SET_ITEMS_GREYED_OUT", --function
+            false
+        )
+    else
+        for _, player in ipairs(GetActivePlayers()) do
+            local ped = GetPlayerPed(player)
+            
+            local tmp = RegisterPedheadshot(ped)
+    
+            while not IsPedheadshotReady(tmp) do
+                Citizen.Wait(0)
+            end
+    
+            local headshot = "";
+            if IsPedheadshotValid(tmp) then
+                headshot = GetPedheadshotTxdString(tmp)
+            end
+    
+            Scaleform.CallFunction(
+                missionselect_scaleform, --scaleform_handle
+                false, --no return data
+                "SET_LOBBY_LIST_DATA_SLOT_EMPTY", --function
+                _ - 1
+            )
+    
+            Scaleform.CallFunction(
+                missionselect_scaleform, --scaleform_handle
+                false, --no return data
+                "SET_LOBBY_LIST_DATA_SLOT", --function
+                _ - 1,
+                0,
+                0,
+                2,
+                GetPlayerServerId(player), --rank
+                true,
+                GetPlayerName(player) .. "          ", --player_name
+                116, --color
+                false, --left_bar_color
+                0, --player_status_icon (47,48,49,54,63,64,65,66)
+                65, --icon (only 65 works)
+                0, --not used
+                "(*0SLT#0400FF", --crew_tag
+                0, --kick
+                "", --status
+                18, --status_color
+                headshot, --param10
+                headshot --param11
+            )
+        end
+    
+        Scaleform.CallFunction(
+            missionselect_scaleform, --scaleform_handle
+            false, --no return data
+            "SET_ITEMS_GREYED_OUT", --function
+            true
+        )
+
+        Scaleform.CallFunction(
+            missionselect_scaleform, --scaleform_handle
+            false, --no return data
+            "SET_LOBBY_LIST_VISIBILITY", --function
+            true
+        )
+    
+        Scaleform.CallFunction(
+            missionselect_scaleform, --scaleform_handle
+            false, --no return data
+            "DISPLAY_LOBBY_LIST_VIEW" --function
+        )
+    end
+end
 
 function update_selection(selected_card) 
     if selected_card <=5 then
@@ -288,8 +306,11 @@ Citizen.CreateThread(function()
 
     while true do
         Citizen.Wait(0)
-        DrawScaleformMovieFullscreen(missionselect_scaleform, 255, 255, 255, 255)
-        DrawScaleformMovieFullscreen(instructional_button_scaleform, 255, 255, 255, 255, 0)
+        if show_next_job_selection then
+            HideHudAndRadarThisFrame()
+            DrawScaleformMovieFullscreen(missionselect_scaleform, 255, 255, 255, 255)
+            DrawScaleformMovieFullscreen(instructional_button_scaleform, 255, 255, 255, 255, 0)
+        end
 
         if IsControlJustPressed(0, 172) then --UP
             if selected_card - 3 >= 0 and selected_card - 3 <= 8 then
@@ -323,6 +344,16 @@ Citizen.CreateThread(function()
                 send_vote_to_server()
                 update_own_vote()
             end
+        elseif IsControlJustPressed(2, 192) then --TAB
+            if player_list_shown then
+                player_list_shown = false
+            else
+                player_list_shown = true
+            end
+            toggle_player_list()
+        elseif IsControlJustPressed(2, 322) then --ESC
+            show_next_job_selection = false
+            SwitchInPlayer(GetPlayerPed(-1))
         end
     end
 end)

@@ -18,6 +18,7 @@ function create_instructional_buttons()
         200
     )
 
+    Scaleform.CreateInstructionalButton(instructional_button_scaleform, 3, 2, 192, "Toggle Player List")
     Scaleform.CreateInstructionalButton(instructional_button_scaleform, 2, 2, 322, "Quit")
     Scaleform.CreateInstructionalButton(instructional_button_scaleform, 1, 2, 191, "Vote")
     Scaleform.CreateInstructionalButton(instructional_button_scaleform, 0, -1, -1, "Continuing (0:35)")

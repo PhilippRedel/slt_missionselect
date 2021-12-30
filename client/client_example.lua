@@ -269,4 +269,6 @@ local scaleform_data = {
     }
 }
 
-TriggerEvent('slt_missionselect:CreateMenu', scaleform_data)
+RegisterCommand('voting', function(source, args)
+    TriggerEvent('slt_missionselect:CreateMenu', scaleform_data)
+end)
